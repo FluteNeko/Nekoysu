@@ -21,10 +21,10 @@ client.subCommands = new Collection();
 const { loadEvents } = require("./Handlers/eventHandler");
 loadEvents(client);
 
-const { connect } = require("mongoose");
+/*const { connect } = require("mongoose");
 connect(DATABASE)
 .then(() => console.log("The client is now connected to the database."))
-.catch((err) => console.log(err));
+.catch((err) => console.log(err));*/
 
 
 

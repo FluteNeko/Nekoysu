@@ -65,7 +65,7 @@ async function get_recentActivity(id, limit, offset) {
 module.exports = {
 	data: new SlashCommandBuilder()
 		.setName("recent_activity")
-		.setDescription("Get recent activity")
+		.setDescription("Get recent activity. Max of 25.")
 		.setDMPermission(true)
         .addStringOption((options) => options
             .setName("username")
@@ -74,9 +74,9 @@ module.exports = {
         )
         .addIntegerOption((options) => options
             .setName("limit")
-            .setDescription("Limit of scores (max 100)")
+            .setDescription("Limit of activities (Max of 16)")
             .setMinValue(1)
-            .setMaxValue(100)
+            .setMaxValue(15)
         )
         .addIntegerOption((options) => options
             .setName("offset")
@@ -102,35 +102,58 @@ module.exports = {
 
 
         const osu = require("../../Utils/osu.json");
+        const locale = interaction.locale;
 
         const recentActivityEmbed = new EmbedBuilder()
             .setColor("#FAD39E")
-            .setAuthor({
-                name: `Recent Activity of ${username}`,
-                url: `https://osu.ppy.sh/users/${profile.id}`
-            })
+            .setTitle(`Recent Activity of ${username}`)
+            .setURL(`https://osu.ppy.sh/users/${profile.id}`)
             .setThumbnail(profile.avatar_url);
                 
 
-            
-        let embedDescription = '';        
+        let inline = 0;
         for(const activity of recentActivity) {
             // Once I figure out every single activity type, convert it into a Switch(case);
 
             if(activity.type === "rank") {
-                embedDescription += `${osu.gamemode[activity.mode].use} [${activity.beatmap.title}](https://osu.ppy.sh${activity.beatmap.url})\n${osu.rank[activity.scoreRank.toLowerCase()].use} #${activity.rank} [${osu.gamemode[activity.mode].name}]\n\n`
+                if(inline % 2 === 0) {
+                    recentActivityEmbed.addFields({
+                        name: '\u200b',
+                        value: '\u200b'
+                    });
+
+                    inline = 1;
+                } else {
+                    inline++;
+                };
+
+                const value = [
+                    `・ Grade: ${osu.rank[activity.scoreRank.toLowerCase()].use}`,
+                    `・ Rank: \u200b \u200b #\`${activity.rank.toLocaleString(locale)}\``,
+                    `・ [Beatmap link](https://osu.ppy.sh${activity.beatmap.url})`
+                ].join("\n");
+
+                recentActivityEmbed.addFields({
+                    name: `${osu.gamemode[activity.mode].use} ${activity.beatmap.title}\n`,
+                    value: value,
+                    inline: true
+                });
+                
+                
+                //`${osu.gamemode[activity.mode].use} [${activity.beatmap.title}](https://osu.ppy.sh${activity.beatmap.url})\n
+                //${osu.rank[activity.scoreRank.toLowerCase()].use} #${activity.rank}\n\n`
             }
 
             else {
-                embedDescription += '\n\nNew type of activity found. Check console.\n\n'
-                console.log(JSON.stringify(activity));
+                recentActivityEmbed.setDescription('New type of activity found. Check console.\n\n')
+                console.log("\n\nNew Activity on recentActivity.js:\n", JSON.stringify(activity), "\n>recentActivity.js");
             };
         };
 
 
 			
 		await interaction.reply({
-            embeds: [recentActivityEmbed.setDescription(embedDescription)]
+            embeds: [recentActivityEmbed]
 		});
 	}
 };
